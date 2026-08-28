@@ -1,0 +1,35 @@
+# ==============================================================================
+# Enterprise Asset Management (EAM) - Docker Compose Orchestration
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  eam-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: enterprise-asset-management
+    image: enterprise-asset-management:latest
+    restart: always
+    ports:
+      # Port mapping: <HOST_PORT>:<CONTAINER_PORT>
+      - "${VITE_DOCKER_PORT:-8080}:80"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:80/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - eam-network
+
+networks:
+  eam-network:
+    driver: bridge

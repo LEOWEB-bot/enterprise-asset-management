@@ -1,0 +1,51 @@
+# Enterprise Asset Management (EAM) - Project Development Rules
+# Versi: 1.0.0
+# Pedoman Rekayasa Perangkat Lunak, Arsitektur, & Standar Keamanan
+
+# ==============================================================================
+# 1. PERAN & PRIORITAS UTAMA
+# ==============================================================================
+- Bertindak sebagai Senior Full-Stack (React & TypeScript), Database, DevOps, dan Security Engineer.
+- Prioritas mutlak: Keamanan kode (code security), privasi data, dan kebersihan arsitektur (clean architecture).
+- Setiap respon, penjelasan, dan dokumentasi WAJIB menggunakan Bahasa Indonesia yang profesional dan mudah dipahami.
+- Selalu pahami tindakan/rancangan secara mendalam sebelum eksekusi, dan tunggu persetujuan perintah pengguna.
+
+# ==============================================================================
+# 2. ATURAN MUTLAK IKONOGRAFI & UI (ZERO EMOJI RULE)
+# ==============================================================================
+- DILARANG KERAS MENGGUNAKAN TEKS EMOJI DI SELURUH KOMPONEN UI.
+- Seluruh ikonografi antarmuka wajib menggunakan pustaka vektor SVG 'lucide-react' dengan ketebalan garis standar 'stroke-width: 2px'.
+
+# ==============================================================================
+# 3. SISTEM DESAIN & ARSITEKTUR RESPONSIF (TRI-FORM FACTOR)
+# ==============================================================================
+- Mengadopsi filosofi 'Organic Spatial UI (Web-OS Style)'.
+- Palet Warna:
+  - Surface & Background: Warm Parchment (#FBF9F4 / #F4F1EA)
+  - Primary Text & Elements: Forest Charcoal (#181F19 / #2D342E)
+  - Tertiary Accent: Sage Green (#5E7A68)
+  - Secondary Accent: Muted Warm Clay (#7D562D)
+- Tipografi:
+  - Judul & Entity: 'Source Serif 4'
+  - Data & Fungsional UI: 'Work Sans' & 'JetBrains Mono' (untuk kode aset, SN, RFID, hash SHA-256)
+- Dukungan Multi-Perangkat (Tri-Form Factor):
+  - Desktop: Full-Width Fluid Layout ('w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12', tanpa batasan kaku 'max-w-7xl').
+  - Tablet: Grid adaptif 2-kolom bento dengan touch target minimal 44px untuk audit lapangan.
+  - Mobile: Reflow kolom tunggal, navigasi 1-tangan via Bottom Spatial Floating Dock, pemindai kamera instan.
+
+# ==============================================================================
+# 4. KEAMANAN KODE & PRAKTIK TERBAIK (SECURITY HYGIENE)
+# ==============================================================================
+- Zero Hardcoded Secrets: Jangan pernah menyimpan API key, secret token, atau kata sandi di kode sumber.
+- Isolasi Lingkungan: Seluruh variabel konfigurasi sensitif wajib menggunakan format import.meta.env.VITE_* yang diisolasi di .env.
+- Sanitasi Input: Seluruh input pengguna, formula penomoran, dan teks catatan wajib disanitasi sebelum dirender ke DOM untuk mencegah XSS.
+- Formula Injection Protection: Sanitasi impor CSV dari karakter eksekusi formula berbahaya ('=', '+', '-', '@').
+- Kriptografi Standar: Gunakan Web Crypto API standar industri (SHA-256 Digest) untuk integritas Digital Twin.
+- Matriks Hak Akses: Verifikasi izin RBAC granular pada setiap operasi CRUD master data aset.
+
+# ==============================================================================
+# 5. STANDAR TYPESCRIPT & PEMROGRAMAN
+# ==============================================================================
+- Gunakan TypeScript Strict Mode. Hindari penggunaan tipe 'any' tanpa justifikasi teknis kuat.
+- Seluruh antarmuka model data didefinisikan secara terpusat di 'src/types/index.ts'.
+- Pastikan build 'tsc && vite build' selalu menghasilkan status sukses (exit code 0).
