@@ -18,7 +18,7 @@ import {
   Menu,
 } from 'lucide-react';
 import { User, AppNotification } from '../../types';
-import { INITIAL_USERS } from '../../data/initialData';
+import { INITIAL_USERS } from '../../data/enterprise-asset-management';
 import { StorageService } from '../../services/storageService';
 import { getRoleBadgeClass } from '../../services/authService';
 import { getI18n, AppLanguage } from '../../utils/i18n';
@@ -52,12 +52,12 @@ export const Header: React.FC<HeaderProps> = ({
   onSwitchUser,
   onUserChange,
   onLogout,
-  onOpenScanner = () => {},
+  onOpenScanner = () => { },
   onNavigateToSettings,
-  onSearch = (_query: string) => {},
+  onSearch = (_query: string) => { },
   searchQuery = '',
   notifications = [],
-  onMarkNotificationRead = (_id: string) => {},
+  onMarkNotificationRead = (_id: string) => { },
   onMarkAllNotificationsRead,
   onMarkNotificationsAsRead,
   isReadOnlyMode = false,
@@ -80,9 +80,9 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const handleSwitchUser = onSwitchUser || onUserChange || (() => {});
-  const handleMarkAllRead = onMarkAllNotificationsRead || onMarkNotificationsAsRead || (() => {});
-  const handleToggleMenu = onToggleSidebar || onOpenMobileMenu || (() => {});
+  const handleSwitchUser = onSwitchUser || onUserChange || (() => { });
+  const handleMarkAllRead = onMarkAllNotificationsRead || onMarkNotificationsAsRead || (() => { });
+  const handleToggleMenu = onToggleSidebar || onOpenMobileMenu || (() => { });
   const availableUsers = users && users.length > 0 ? users : INITIAL_USERS;
 
   const unreadCount = (notifications || []).filter((n) => !n.isRead).length;
@@ -220,9 +220,8 @@ export const Header: React.FC<HeaderProps> = ({
                         <div
                           key={notif.id}
                           onClick={() => onMarkNotificationRead(notif.id)}
-                          className={`p-3.5 text-xs cursor-pointer hover:bg-stone-100/60 dark:hover:bg-stone-800/60 transition-colors flex items-start gap-3 ${
-                            !notif.isRead ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''
-                          }`}
+                          className={`p-3.5 text-xs cursor-pointer hover:bg-stone-100/60 dark:hover:bg-stone-800/60 transition-colors flex items-start gap-3 ${!notif.isRead ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''
+                            }`}
                         >
                           <div className="mt-0.5">{getNotifIcon(notif.type)}</div>
                           <div className="flex-1 min-w-0">
@@ -371,11 +370,10 @@ export const Header: React.FC<HeaderProps> = ({
                                   handleSwitchUser(usr);
                                   setShowRoleDropdown(false);
                                 }}
-                                className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                                  isSelected
+                                className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs flex items-center justify-between transition-colors cursor-pointer ${isSelected
                                     ? 'bg-[#181F19] dark:bg-stone-100 text-white dark:text-[#181F19] font-bold shadow-xs'
                                     : 'text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800/60'
-                                }`}
+                                  }`}
                               >
                                 <div className="flex flex-col min-w-0 pr-2">
                                   <span className="truncate">{usr.name}</span>
@@ -384,11 +382,10 @@ export const Header: React.FC<HeaderProps> = ({
                                   </span>
                                 </div>
                                 <span
-                                  className={`shrink-0 px-1.5 py-0.2 rounded-md text-[8px] font-bold border ${
-                                    isSelected
+                                  className={`shrink-0 px-1.5 py-0.2 rounded-md text-[8px] font-bold border ${isSelected
                                       ? 'border-white/30 text-white dark:text-[#181F19]'
                                       : getRoleBadgeClass(usr.role)
-                                  }`}
+                                    }`}
                                 >
                                   {usr.role}
                                 </span>

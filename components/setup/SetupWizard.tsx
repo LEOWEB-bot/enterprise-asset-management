@@ -40,7 +40,7 @@ import {
   INITIAL_MAINTENANCE,
   INITIAL_AUDIT_CAMPAIGNS,
   INITIAL_AUDIT_ITEMS,
-} from '../../data/initialData';
+} from '../../data/enterprise-asset-management';
 import { logActivity } from '../../services/activityLogger';
 
 interface SetupWizardProps {
@@ -199,8 +199,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     logActivity(
       'SYSTEM_SETUP_COMPLETED',
       'SETTING',
-      `Setup wizard diselesaikan oleh ${adminEmail} (Master Data: ${
-        includeDefaultMasterData ? 'Default' : 'Kosong/Manual'
+      `Setup wizard diselesaikan oleh ${adminEmail} (Master Data: ${includeDefaultMasterData ? 'Default' : 'Kosong/Manual'
       }, Seed: ${seedType})`
     );
 
@@ -211,7 +210,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         spread: 80,
         origin: { y: 0.6 },
       });
-    } catch {}
+    } catch { }
 
     onComplete();
   };
@@ -251,13 +250,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                   key={s.id}
                   onClick={() => dbMigrated && setCurrentStep(s.id)}
                   disabled={!dbMigrated && s.id > 0}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed ${
-                    isCurrent
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl sm:rounded-2xl text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed ${isCurrent
                       ? 'bg-[#181F19] dark:bg-stone-100 text-white dark:text-[#181F19] shadow-sm'
                       : isDone
-                      ? 'bg-white/80 dark:bg-stone-800 text-emerald-700 dark:text-emerald-400 hover:bg-white'
-                      : 'text-stone-400 dark:text-stone-600 opacity-60'
-                  }`}
+                        ? 'bg-white/80 dark:bg-stone-800 text-emerald-700 dark:text-emerald-400 hover:bg-white'
+                        : 'text-stone-400 dark:text-stone-600 opacity-60'
+                    }`}
                 >
                   {isDone ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -309,9 +307,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-stone-600 dark:text-stone-400 font-medium">Status Skema Migrasi:</span>
                   <span
-                    className={`font-bold ${
-                      dbMigrated ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
-                    }`}
+                    className={`font-bold ${dbMigrated ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                      }`}
                   >
                     {dbMigrated ? 'Skema Terverifikasi (v2.6.4)' : 'Menunggu Eksekusi Migrasi'}
                   </span>
@@ -534,11 +531,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div
                   onClick={() => setIncludeDefaultMasterData(true)}
-                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${
-                    includeDefaultMasterData
+                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${includeDefaultMasterData
                       ? 'bg-stone-100/90 dark:bg-stone-800 border-[#181F19] dark:border-stone-200 shadow-sm'
                       : 'bg-white/60 dark:bg-stone-950/40 border-stone-200 dark:border-stone-800 opacity-70'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-400">
@@ -556,11 +552,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
                 <div
                   onClick={() => setIncludeDefaultMasterData(false)}
-                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${
-                    !includeDefaultMasterData
+                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${!includeDefaultMasterData
                       ? 'bg-stone-100/90 dark:bg-stone-800 border-[#181F19] dark:border-stone-200 shadow-sm'
                       : 'bg-white/60 dark:bg-stone-950/40 border-stone-200 dark:border-stone-800 opacity-70'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase text-stone-500">Manual Kosong</span>
@@ -600,11 +595,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                 {/* Opsi 1: Clean Slate Production */}
                 <div
                   onClick={() => handleSelectSeedType('minimal')}
-                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${
-                    seedType === 'minimal'
+                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${seedType === 'minimal'
                       ? 'bg-stone-100/90 dark:bg-stone-800 border-[#181F19] dark:border-stone-200 shadow-sm'
                       : 'bg-white/60 dark:bg-stone-950/40 border-stone-200 dark:border-stone-800 opacity-70'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase text-stone-700 dark:text-stone-300">
@@ -623,11 +617,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                 {/* Opsi 2: Full Corporate Demo Seed */}
                 <div
                   onClick={() => handleSelectSeedType('full')}
-                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${
-                    seedType === 'full'
+                  className={`p-5 rounded-3xl border transition-all cursor-pointer space-y-3 ${seedType === 'full'
                       ? 'bg-stone-100/90 dark:bg-stone-800 border-[#181F19] dark:border-stone-200 shadow-sm'
                       : 'bg-white/60 dark:bg-stone-950/40 border-stone-200 dark:border-stone-800 opacity-70'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase text-emerald-700 dark:text-emerald-400">

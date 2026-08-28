@@ -29,7 +29,7 @@ import {
   INITIAL_AUDIT_CAMPAIGNS,
   INITIAL_AUDIT_ITEMS,
   INITIAL_ACTIVITY_LOGS,
-} from '../data/initialData';
+} from '../data/enterprise-asset-management';
 
 const STORAGE_KEYS = {
   SETUP_DONE: 'assetcorp_setup_done',
@@ -123,7 +123,7 @@ export const StorageService = {
     const direct = safeGetItem(STORAGE_KEYS.SEED_MODE);
     if (direct === 'minimal' || direct === 'clean') return 'minimal';
     if (direct === 'full') return 'full';
-    
+
     // Check system setting fallback
     const settings = this.getSettings();
     const modeSetting = settings.find((s) => s.key === 'system.seed_mode');
