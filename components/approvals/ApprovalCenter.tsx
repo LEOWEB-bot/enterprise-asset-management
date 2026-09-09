@@ -41,7 +41,7 @@ export const ApprovalCenter: React.FC<ApprovalCenterProps> = ({
   onRefresh,
   isReadOnlyMode,
 }) => {
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 

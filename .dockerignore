@@ -30,3 +30,9 @@ brain/
 .system_generated/
 .tempmediaStorage/
 scratch/
+
+# Local databases and backups (mounted via volume)
+data/*.json
+data/*.tmp*
+data/*.db*
+data/backups/*

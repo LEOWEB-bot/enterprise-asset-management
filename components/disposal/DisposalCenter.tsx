@@ -55,7 +55,7 @@ export const DisposalCenter: React.FC<DisposalCenterProps> = ({
   onRefreshData,
   isReadOnlyMode = false,
 }) => {
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [activeSubTab, setActiveSubTab] = useState<'queue' | 'auctions' | 'archive'>('queue');

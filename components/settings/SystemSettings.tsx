@@ -45,6 +45,7 @@ import {
   Database,
   Cpu,
   Fingerprint,
+  ArrowRight,
 } from 'lucide-react';
 import { User as UserType } from '../../types';
 import { StorageService } from '../../services/storageService';
@@ -52,6 +53,7 @@ import { logActivity } from '../../services/activityLogger';
 import { getRoleBadgeClass, hasPermission } from '../../services/authService';
 import { TwoFactorSetupModal } from '../auth/TwoFactorSetupModal';
 import { getI18n, AppLanguage } from '../../utils/i18n';
+import { ApiService, BackupItem } from '../../services/apiService';
 
 interface SystemSettingsProps {
   currentUser: UserType;
@@ -60,6 +62,7 @@ interface SystemSettingsProps {
   onUpdateCurrentUser: (updatedUser: UserType) => void;
   onLogout?: () => void;
   onLaunchSetupWizard?: () => void;
+  onNavigateTab?: (tab: string) => void;
   isReadOnlyMode?: boolean;
 }
 
@@ -70,9 +73,10 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
   onUpdateCurrentUser,
   onLogout,
   onLaunchSetupWizard,
+  onNavigateTab,
   isReadOnlyMode = false,
 }) => {
-  const currentLang: AppLanguage = propLanguage || currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = propLanguage || currentUser?.language || StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [activeTab, setActiveTab] = useState<'PROFILE' | 'SECURITY' | 'BRANDING' | 'MAINTENANCE'>('BRANDING');
@@ -102,7 +106,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
 
   // Sync language state when prop or currentUser changes
   useEffect(() => {
-    const activeLang = propLanguage || currentUser?.language || StorageService.getLanguage() || 'id';
+    const activeLang = propLanguage || currentUser?.language || StorageService.getLanguage() || 'en';
     setLanguage(activeLang);
   }, [propLanguage, currentUser.language]);
 
@@ -127,18 +131,21 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
   const [isResetting, setIsResetting] = useState(false);
 
   // GitHub Updater States
-  const currentAppVersion = 'v2.6.4-enterprise';
+  const currentAppVersion = 'v1.0.0';
+  const githubRepo = (import.meta as any).env?.VITE_GITHUB_REPO || 'LEOWEB-bot/enterprise-asset-management';
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<{
     checked: boolean;
     hasUpdate: boolean;
     latestVersion?: string;
     releaseNotes?: string[];
+    releaseUrl?: string;
     publishedAt?: string;
+    errorMessage?: string;
   }>({
     checked: false,
     hasUpdate: false,
-    latestVersion: 'v2.6.4-enterprise',
+    latestVersion: 'v1.0.0',
   });
   const [copiedCommand, setCopiedCommand] = useState(false);
 
@@ -369,7 +376,7 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
     }, 2000);
   };
 
-  // Download JSON Backup
+  // Download JSON Backup Local
   const handleDownloadBackup = () => {
     try {
       const backupData = StorageService.exportDatabase();
@@ -400,21 +407,66 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
 
   const handleCheckGitHubUpdate = async () => {
     setIsCheckingUpdate(true);
-    setTimeout(() => {
-      setIsCheckingUpdate(false);
+    try {
+      const response = await fetch(`https://api.github.com/repos/${githubRepo}/releases/latest`, {
+        headers: {
+          'Accept': 'application/vnd.github.v3+json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // No release or unpublished
+          setUpdateStatus({
+            checked: true,
+            hasUpdate: false,
+            latestVersion: currentAppVersion,
+            releaseNotes: ['Versi saat ini adalah rilis rujukan aktif.'],
+          });
+          showToast(isEn ? 'System is running current release.' : 'Sistem menggunakan versi rilis aktif saat ini.');
+          return;
+        }
+        throw new Error(`GitHub API HTTP ${response.status}`);
+      }
+
+      const releaseData = await response.json();
+      const rawTag = releaseData.tag_name || releaseData.name || currentAppVersion;
+      const cleanLatest = rawTag.replace(/^v/, '').trim();
+      const cleanCurrent = currentAppVersion.replace(/^v/, '').trim();
+
+      const isNewer = cleanLatest !== cleanCurrent && cleanLatest > cleanCurrent;
+
+      const bodyNotes = releaseData.body
+        ? releaseData.body.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0 && !s.startsWith('#')).slice(0, 5)
+        : ['Pembaruan rilis resmi di GitHub.'];
+
+      setUpdateStatus({
+        checked: true,
+        hasUpdate: isNewer,
+        latestVersion: rawTag.startsWith('v') ? rawTag : `v${rawTag}`,
+        releaseUrl: releaseData.html_url,
+        publishedAt: releaseData.published_at ? new Date(releaseData.published_at).toLocaleDateString('id-ID') : undefined,
+        releaseNotes: bodyNotes.length > 0 ? bodyNotes : ['Pembaruan performa dan peningkatan fitur.'],
+      });
+
+      if (isNewer) {
+        showToast(isEn ? `New version ${rawTag} available!` : `Pembaruan versi ${rawTag} tersedia di GitHub!`);
+      } else {
+        showToast(isEn ? 'System version is up to date.' : `Versi sistem Anda (${currentAppVersion}) sudah mutakhir.`);
+      }
+    } catch (err: any) {
+      console.warn('GitHub update check notice:', err);
+      // Fallback graceful
       setUpdateStatus({
         checked: true,
         hasUpdate: false,
-        latestVersion: 'v2.6.4-enterprise',
-        publishedAt: '2026-08-27',
-        releaseNotes: [
-          'Arsitektur: Matriks Hak Akses (RBAC) granular dengan 4 domain fungsional',
-          'Tampilan: Transformasi penuh ke Organic Spatial UI (Web-OS Style)',
-          'Keamanan: Proteksi backup JSON terisolasi & Autentikasi Ganda (2FA TOTP)',
-          'Performa: Optimalisasi rendering high-density table & zero-emoji compliance',
-        ],
+        latestVersion: currentAppVersion,
+        errorMessage: 'Pemeriksaan menggunakan versi build lokal.',
       });
-    }, 800);
+      showToast(isEn ? 'Checked against local build version.' : `Pemeriksaan selesai: Versi lokal aktif (${currentAppVersion}).`);
+    } finally {
+      setIsCheckingUpdate(false);
+    }
   };
 
   const handleExecuteSystemReset = () => {
@@ -657,8 +709,8 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
               : 'text-stone-600 dark:text-stone-400 hover:text-stone-900'
           }`}
         >
-          <Database className="w-4 h-4 text-[#7D562D]" />
-          <span>{isEn ? 'Backup & Maintenance' : 'Cadangan & Pemeliharaan Sistem'}</span>
+          <Sliders className="w-4 h-4 text-[#7D562D]" />
+          <span>{isEn ? 'System Updates & Reset' : 'Pembaruan & Reset Sistem'}</span>
         </button>
       </div>
 
@@ -1159,52 +1211,36 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
         </div>
       )}
 
-      {/* TAB 4: SYSTEM MAINTENANCE & BACKUP */}
+      {/* TAB 4: SYSTEM MAINTENANCE & UPDATES */}
       {activeTab === 'MAINTENANCE' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Database Backup Card */}
-          <div className="glass-panel squircle p-6 sm:p-8 space-y-6">
-            <div className="border-b border-stone-200/80 dark:border-stone-800 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-2xl bg-[#5E7A68]/15 text-[#5E7A68] dark:text-emerald-300">
-                  <Database className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-serif-display text-lg font-bold text-[#181F19] dark:text-stone-100">
-                    {isEn ? 'JSON Database Backup & Disaster Recovery' : 'Cadangan Basis Data & Pemulihan Darurat'}
-                  </h3>
-                  <p className="text-xs text-stone-500">
-                    Ekspor seluruh tabel aset, mutasi, perbaikan, approval, dan log ke file JSON aman.
-                  </p>
-                </div>
+        <div className="space-y-8">
+          {/* Quick Banner: Backup & Recovery Now Dedicated in Sidebar */}
+          <div className="p-6 rounded-3xl bg-[#5E7A68]/10 border border-[#5E7A68]/25 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div className="flex items-start gap-3.5">
+              <div className="p-3 rounded-2xl bg-[#5E7A68]/20 text-[#5E7A68] dark:text-emerald-300 shrink-0">
+                <Database className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100">
+                  {isEn ? 'Dedicated Backup & Recovery Center' : 'Pusat Cadangan & Pemulihan Sistem (Menu Mandiri)'}
+                </h4>
+                <p className="text-xs text-stone-600 dark:text-stone-400 max-w-xl leading-relaxed">
+                  {isEn
+                    ? 'Automated 24h scheduler, AWS S3/Cloudflare R2 cloud sync, instant snapshot creation, and disaster rollback are now managed in their own dedicated workspace.'
+                    : 'Penjadwal otomatis 24 jam, replikasi cloud S3/R2, pembuatan snapshot instan, dan rollback data kini dikelola secara mandiri pada menu khusus di Sidebar.'}
+                </p>
               </div>
             </div>
-
-            <div className="space-y-4 text-xs">
-              <p className="text-stone-600 dark:text-stone-400 leading-relaxed">
-                Cadangkan seluruh basis data secara berkala untuk keperluan audit offline atau migrasi server VPS. File cadangan terenkripsi struktur JSON berstandar terbuka.
-              </p>
-
-              <div className="p-5 rounded-3xl bg-stone-100/70 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <strong className="text-xs font-bold text-stone-900 dark:text-stone-100 block">
-                    {isEn ? 'Export Full Database (.json)' : 'Ekspor Basis Data Penuh (.json)'}
-                  </strong>
-                  <span className="text-[11px] text-stone-500">
-                    Termasuk data aset, riwayat perbaikan, stocktake, dan RBAC.
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleDownloadBackup}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#5E7A68] hover:bg-[#4E6857] text-white text-xs font-bold shadow-md shadow-[#5E7A68]/20 transition-all cursor-pointer"
-                >
-                  <Download className="w-4 h-4" />
-                  <span>{isEn ? 'Download Backup' : 'Unduh Cadangan'}</span>
-                </button>
-              </div>
-            </div>
+            {onNavigateTab && (
+              <button
+                type="button"
+                onClick={() => onNavigateTab('backup')}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#5E7A68] hover:bg-[#4E6857] text-white text-xs font-bold transition-all shrink-0 cursor-pointer shadow-md shadow-[#5E7A68]/20"
+              >
+                <span>{isEn ? 'Open Backup & Recovery' : 'Buka Pusat Cadangan'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* GitHub Updater & VPS Commands */}
@@ -1255,10 +1291,30 @@ export const SystemSettings: React.FC<SystemSettingsProps> = ({
                 </button>
 
                 {updateStatus.checked && (
-                  <span className="text-[11px] font-bold text-[#5E7A68] flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Versi Anda mutakhir ({updateStatus.latestVersion})</span>
-                  </span>
+                  updateStatus.hasUpdate ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                        <Sparkles className="w-4 h-4" />
+                        <span>Pembaruan Tersedia ({updateStatus.latestVersion})</span>
+                      </span>
+                      {updateStatus.releaseUrl && (
+                        <a
+                          href={updateStatus.releaseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-200 text-[10px] font-bold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>Lihat Rilis</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-[11px] font-bold text-[#5E7A68] flex items-center gap-1">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>Versi Anda mutakhir ({updateStatus.latestVersion || currentAppVersion})</span>
+                    </span>
+                  )
                 )}
               </div>
             </div>

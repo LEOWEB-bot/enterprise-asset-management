@@ -4,6 +4,8 @@ export type UUID = string;
 
 export type UserRole = 'super-admin' | 'asset-manager' | 'auditor' | 'maintenance' | 'viewer';
 
+export type AppLanguage = 'id' | 'en';
+
 export interface User {
   id: UUID;
   name: string;
@@ -16,7 +18,7 @@ export interface User {
   idCard?: string; // Nomor ID Card Pegawai / NIK
   birthDate?: string; // Tanggal Lahir (YYYY-MM-DD)
   theme?: 'light' | 'dark' | 'system';
-  language?: 'id' | 'en';
+  language?: AppLanguage;
   password?: string; // Hashed / plain stored credential
   twoFactorEnabled: boolean;
   twoFactorSecret?: string;
@@ -41,7 +43,9 @@ export type Permission =
   | 'maintenance.manage'
   | 'reports.view'
   | 'approvals.manage'
-  | 'approvals.process';
+  | 'approvals.process'
+  | 'backup.manage'
+  | 'backup.view';
 
 export interface RoleDefinition {
   id: UserRole;

@@ -65,7 +65,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   // Step 1: Admin Data
-  const [adminName, setAdminName] = useState('Budi Santoso, S.Kom');
+  const [adminName, setAdminName] = useState('Super Admin');
   const [adminEmail, setAdminEmail] = useState('admin@assetcorp.id');
   const [adminDept, setAdminDept] = useState('IT & Infrastructure');
   const [admin2FA, setAdmin2FA] = useState(false);
@@ -108,6 +108,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       twoFactorEnabled: admin2FA,
       twoFactorSecret: 'JBSWY3DPEHPK3PXP',
       isActive: true,
+      language: 'en',
       lastLoginAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
     };
 
@@ -310,7 +311,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                     className={`font-bold ${dbMigrated ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                       }`}
                   >
-                    {dbMigrated ? 'Skema Terverifikasi (v2.6.4)' : 'Menunggu Eksekusi Migrasi'}
+                    {dbMigrated ? 'Skema Terverifikasi (v1.0.0)' : 'Menunggu Eksekusi Migrasi'}
                   </span>
                 </div>
               </div>

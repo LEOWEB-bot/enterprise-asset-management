@@ -53,7 +53,7 @@ export const AssetPublicView: React.FC<AssetPublicViewProps> = ({
   onBack,
   onRequestMaintenance,
 }) => {
-  const currentLang: AppLanguage = StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [qrDataUrl, setQrDataUrl] = useState<string>('');

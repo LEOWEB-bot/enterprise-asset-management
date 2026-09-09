@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Scale,
   Search,
+  HardDriveDownload,
 } from 'lucide-react';
 import { getI18n, AppLanguage } from '../../utils/i18n';
 import { StorageService } from '../../services/storageService';
@@ -53,12 +54,16 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 
   const handleSelectTab = onSelectTab || onTabChange || (() => {});
   const effectiveApprovalCount = pendingApprovalCount || pendingApprovalsCount || 0;
-  const currentLang: AppLanguage = language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = language || StorageService.getLanguage() || 'en';
+  const isEn = currentLang === 'en';
   const t = getI18n(currentLang);
 
   const canManageSettings = currentUser ? hasPermission(currentUser, 'settings.manage') : true;
   const canViewAudits = currentUser
     ? hasPermission(currentUser, 'audits.manage') || hasPermission(currentUser, 'settings.manage')
+    : true;
+  const canViewBackup = currentUser
+    ? hasPermission(currentUser, 'backup.view') || hasPermission(currentUser, 'backup.manage') || canManageSettings
     : true;
 
   // Tutup popup Web-OS App Launcher jika klik di luar
@@ -83,6 +88,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     if (id === 'approvals') return currentTab === 'approvals';
     if (id === 'reports') return currentTab === 'reports' || currentTab === 'depreciation';
     if (id === 'system-settings') return currentTab === 'system-settings' || currentTab === 'settings';
+    if (id === 'backup') return currentTab === 'backup';
     if (id === 'audits') return currentTab === 'audits' || currentTab === 'stocktake';
     if (id === 'disposals') return currentTab === 'disposals' || currentTab === 'disposal';
     if (id === 'rbac') return currentTab === 'rbac';
@@ -99,6 +105,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     'disposals',
     'disposal',
     'rbac',
+    'backup',
     'master-data',
     'logs',
     'audittrail',
@@ -154,6 +161,14 @@ export const BottomNav: React.FC<BottomNavProps> = ({
           desc: 'Manajemen multi-role & otorisasi pengguna',
           visible: canManageSettings,
           badge: 'Security',
+        },
+        {
+          id: 'backup',
+          label: isEn ? 'Backup & Recovery' : 'Cadangan & Pemulihan',
+          icon: HardDriveDownload,
+          desc: isEn ? 'Automated snapshots, S3/R2 cloud sync & recovery' : 'Pencadangan otomatis, sinkronisasi S3/R2 & restore',
+          visible: canViewBackup,
+          badge: 'Disaster Recovery',
         },
         {
           id: 'logs',

@@ -29,7 +29,7 @@ interface DepreciationFinancialsProps {
 }
 
 export const DepreciationFinancials: React.FC<DepreciationFinancialsProps> = ({ assets, categories }) => {
-  const currentLang: AppLanguage = StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');

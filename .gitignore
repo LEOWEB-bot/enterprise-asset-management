@@ -40,3 +40,12 @@ dist-ssr
 .aistudio/
 brain/
 scratch/
+
+# Persistent Database & Backups
+data/*.json
+data/*.tmp*
+data/*.db
+data/*.db-wal
+data/*.db-shm
+data/backups/*
+!data/backups/.gitkeep

@@ -49,7 +49,7 @@ export const MaintenanceModal: React.FC<MaintenanceModalProps> = ({
 }) => {
   const allAssets = useMemo(() => StorageService.getAssets().filter((a) => a.status !== 'DISPOSED'), []);
 
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 

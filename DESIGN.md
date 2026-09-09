@@ -106,9 +106,9 @@ spacing:
 
 # Design System Guidelines
 
-The **Enterprise Asset Management (EAM)** design system adheres to the **Organic Spatial UI (Web-OS Style)** architecture, harmonizing *Tactile Modernism*, subtle glassmorphism (*Ambient Backdrop Blur*), full-width fluid responsive layouts, and spatial bento grid telemetry.
+The **Enterprise Asset Management (EAM)** design system adheres to the **Organic Spatial UI (Web-OS Style)** architecture, harmonizing *Tactile Modernism*, subtle glassmorphism (*Ambient Backdrop Blur*), full-width fluid responsive layouts, spatial bento grid telemetry, and high-density operational ergonomics.
 
-> 🌐 **Bahasa / Language**: **English** | [Bahasa Indonesia](#pedoman-sistem-desain-versi-bahasa-indonesia)
+> **Bahasa / Language**: **English** | [Bahasa Indonesia](#pedoman-sistem-desain-versi-bahasa-indonesia)
 
 ---
 
@@ -117,7 +117,7 @@ The **Enterprise Asset Management (EAM)** design system adheres to the **Organic
 - **Core Concept**: *Organic Spatial Web-OS*.
 - **Experience Objective**: Deliver digital calm, high operational workspace density, and refined tactile interactions reminiscent of premium physical media.
 - **Absolute Iconography Rule (Zero Emoji Rule)**:
-  - **NEVER USE NATIVE TEXT EMOJIS** anywhere in UI components.
+  - **NEVER USE NATIVE TEXT EMOJIS** anywhere in UI components, notifications, tooltips, or documentation.
   - All iconography must strictly utilize **`lucide-react`** SVG vector icons with standard `stroke-width: 2px`.
 
 ---
@@ -167,17 +167,54 @@ Engineered from the ground up for **Universal Multi-Device Parity**:
 
 ---
 
-## 5. Core Spatial Components
+## 5. Master Asset Registration Spatial Bento Modal (`AssetFormModal.tsx`)
+
+The asset registration modal embodies the purest expression of the Organic Spatial UI (Web-OS Style):
+
+### A. 4 Spatial Bento Cards Layout
+1. **Card 1: Core Physical Identity & Categorization**:
+   - Sequential Asset Code Generator Formula (`AST-YYYY-XXXXX`) with one-click refresh button.
+   - Official Asset Name, Category Taxonomy selector, Brand / Model specification, Physical Room/Floor Location, and Operational Status badge.
+2. **Card 2: Financial Valuation & PSAK 16 Accounting**:
+   - Initial Acquisition Cost input with currency formatting.
+   - Purchase Date picker, Economic Useful Life slider/input (Months), and Estimated Salvage/Residual Value.
+   - Accounting Depreciation Method toggle: *Straight-Line (Garis Lurus)* or *Declining Balance (Saldo Menurun)*.
+3. **Card 3: Custody, Verification & Smart Tagging**:
+   - Custodian PIC assignment with direct user lookup.
+   - Manufacturer Serial Number (SN).
+   - Radio-Frequency IoT telemetry: RFID EPC Gen2 96-bit tag identifier and NFC UID chip tag identifier with quick-generate actions.
+4. **Card 4: Visual Documentation & Technical Specs**:
+   - Client-side HTML5 Canvas photo compressor: automatically resizes uploaded camera photos to max 1280px at 80% JPEG quality, keeping payloads lightweight.
+   - Custom Key-Value Technical Attribute Pairs: dynamically add specifications (e.g., Processor, RAM, Voltage, License Plate, IMEI).
+
+### B. Live PSAK 16 Telemetry Sticky Bar
+Pinned dynamically at the modal footer above the action buttons:
+- **Net Book Value (NBV)**: Real-time book value calculated from cost, useful life, and acquisition date.
+- **Monthly Depreciation**: Exact monthly financial charge amortized according to selected method.
+- **Total Accumulated Depreciation**: Total written-off depreciation to date.
+
+### C. Pristine Dummy-Free Baseline
+All fields initialize clean and empty without pre-filled mock costs, fake serial numbers, or hardcoded dummy custodians, guaranteeing that newly registered assets represent genuine enterprise inventory.
+
+---
+
+## 6. Core Spatial Components
 
 1. **Floating Spatial Modals**: Rounded corners `rounded-[32px]` to `rounded-[36px]`, backdrop blur `backdrop-blur-3xl`, subtle `1px border-stone-200/90`, and deep `shadow-2xl`.
 2. **Bento KPI Widgets**: Metric capsules with progress bars and contextual telemetry.
 3. **Bottom Spatial Action Dock**: Floating quick-launcher for camera scanner, approvals, and app switcher.
+4. **Storage & Backup Telemetry Cards**: Bento cards displaying SQLite WAL status (`data/eam.db`), dual-layer backup status (Local cron + Cloud S3/R2), storage capacity gauges, live rotation badges (`15 Snapshots Max`), and subtle state indicator pills (`Ready`, `Syncing`, `Offsite Replicated`).
 
 ---
 
 ## Pedoman Sistem Desain (Versi Bahasa Indonesia)
 
-- **Konsep**: *Organic Spatial UI (Web-OS Style)*.
-- **Palet Warna**: *Warm Parchment* (`#FBF9F4`), *Forest Charcoal* (`#181F19`), *Sage Green* (`#5E7A68`), *Muted Warm Clay* (`#7D562D`).
-- **Aturan Mutlak**: Dilarang menggunakan teks emoji di UI (100% `lucide-react`, stroke-width: 2px).
-- **Responsivitas Tri-Form Factor**: Desktop Full-Width Fluid, Tablet 2-Kolom Touch, Mobile Bottom Floating Dock 1-Tangan.
+- **Konsep Arsitektur**: *Organic Spatial UI (Web-OS Style)*.
+- **Palet Warna Organik**: *Warm Parchment* (`#FBF9F4`), *Forest Charcoal* (`#181F19`), *Sage Green* (`#5E7A68`), *Muted Warm Clay* (`#7D562D`).
+- **Aturan Mutlak Tanpa Emoji**: Dilarang keras menggunakan teks emoji bawaan sistem operasi di antarmuka web (100% menggunakan SVG `lucide-react`, stroke-width: 2px).
+- **Responsivitas Tri-Form Factor**: Desktop Full-Width Fluid (tanpa batasan lebar kaku), Tablet 2-Kolom Touch (target sentuh min 44px), Mobile Bottom Floating Dock 1-Tangan.
+- **Modal Pendaftaran Aset Spasial Bento (`AssetFormModal.tsx`)**:
+  - 4 Kartu Bento: Identitas Fisik, Valuasi Finansial & Akuntansi PSAK 16, Hak Asuh & Tagging RFID/NFC, serta Dokumentasi Foto Kanvas & Spesifikasi Kustom.
+  - Bilah Telemetri Depresiasi PSAK 16 langsung menghitung Nilai Buku Bersih, Beban Depresiasi Bulanan, dan Akumulasi Penyusutan secara reaktif.
+  - Keadaan awal bersih (*pristine clean*) tanpa sisa data tiruan atau dummy.
+- **Komponen Telemetri Database & Cadangan**: Kartu bento pemantauan SQLite WAL (`data/eam.db`), sinkronisasi atomik bayangan, dan pencadangan ganda internal/cloud dengan badge rotasi 15 snapshot.

@@ -57,7 +57,7 @@ export const AssetImportModal: React.FC<AssetImportModalProps> = ({
   onClose,
   onImportComplete,
 }) => {
-  const currentLang: AppLanguage = StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [file, setFile] = useState<File | null>(null);

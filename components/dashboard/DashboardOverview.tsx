@@ -53,7 +53,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   currentUser,
 }) => {
   const handleNavigate = onNavigateTab || onNavigate || (() => {});
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 

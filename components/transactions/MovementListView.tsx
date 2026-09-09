@@ -44,7 +44,7 @@ export const MovementListView: React.FC<MovementListViewProps> = ({
   onRefresh,
   isReadOnlyMode,
 }) => {
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 
@@ -70,7 +70,7 @@ export const MovementListView: React.FC<MovementListViewProps> = ({
     const totalMovements = movements.length;
     const completedMovements = movements.filter((m) => m.status === 'COMPLETED').length;
     const pendingMovements = movements.filter((m) => m.status === 'PENDING').length;
-    const onTimeRate = totalMovements > 0 ? ((completedMovements / totalMovements) * 100).toFixed(1) : '98.6';
+    const onTimeRate = totalMovements > 0 ? ((completedMovements / totalMovements) * 100).toFixed(1) : '100.0';
 
     // Calculate most frequent route
     const routeCounts: Record<string, number> = {};
@@ -78,7 +78,7 @@ export const MovementListView: React.FC<MovementListViewProps> = ({
       const key = `${m.fromLocationName || 'HQ'} -> ${m.toLocationName}`;
       routeCounts[key] = (routeCounts[key] || 0) + 1;
     });
-    let topRoute = 'HQ Jakarta -> Surabaya Logistics';
+    let topRoute = isEn ? 'No transfer routes yet' : 'Belum ada rute perpindahan';
     let maxCount = 0;
     Object.entries(routeCounts).forEach(([rt, cnt]) => {
       if (cnt > maxCount) {

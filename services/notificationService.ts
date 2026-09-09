@@ -123,7 +123,7 @@ export const NotificationService = {
     } catch (e) {
       console.warn('Failed to parse dispatch logs', e);
     }
-    return StorageService.isSetupCompleted() ? [] : INITIAL_LOGS;
+    return [];
   },
 
   saveDispatchLogs(logs: WebhookDispatchLog[]): void {

@@ -46,7 +46,7 @@ export const MaintenanceListView: React.FC<MaintenanceListViewProps> = ({
   onRefresh,
   isReadOnlyMode,
 }) => {
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 
@@ -68,8 +68,8 @@ export const MaintenanceListView: React.FC<MaintenanceListViewProps> = ({
     const completed = maintenance.filter((m) => m.status === 'COMPLETED').length;
     const totalCost = maintenance.reduce((sum, m) => sum + (m.cost || 0), 0);
     const totalDowntime = maintenance.reduce((sum, m) => sum + (m.downtimeHours || 0), 0);
-    const avgDowntime = totalRecords > 0 ? (totalDowntime / totalRecords).toFixed(1) : '4.2';
-    const fleetUptime = totalRecords > 0 ? (100 - (inProgress / Math.max(assets.length, 1)) * 10).toFixed(1) : '98.4';
+    const avgDowntime = totalRecords > 0 ? (totalDowntime / totalRecords).toFixed(1) : '0.0';
+    const fleetUptime = assets.length > 0 ? Math.max(0, 100 - (inProgress / assets.length) * 100).toFixed(1) : '100.0';
 
     return { totalRecords, inProgress, planned, completed, totalCost, totalDowntime, avgDowntime, fleetUptime };
   }, [maintenance, assets]);

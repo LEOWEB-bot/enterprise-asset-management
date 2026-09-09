@@ -45,7 +45,7 @@ interface AuditTrailViewerProps {
 }
 
 export const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({ currentUser, language, isReadOnlyMode }) => {
-  const currentLang: AppLanguage = language || currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = language || currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 

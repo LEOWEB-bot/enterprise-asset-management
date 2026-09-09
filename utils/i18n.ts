@@ -48,6 +48,7 @@ export interface TranslationDictionary {
     reports: string;
     rbac: string;
     systemSettings: string;
+    backup: string;
     masterData: string;
     logs: string;
     apiDocs: string;
@@ -218,6 +219,7 @@ export const translations: Record<AppLanguage, TranslationDictionary> = {
       reports: 'Laporan & Rekap',
       rbac: 'Hak Akses (RBAC)',
       systemSettings: 'Pengaturan Sistem',
+      backup: 'Cadangan & Pemulihan',
       masterData: 'Master Data & Kebijakan',
       logs: 'Audit Trail & Log',
       apiDocs: 'API & Webhook Docs',
@@ -386,6 +388,7 @@ export const translations: Record<AppLanguage, TranslationDictionary> = {
       reports: 'Reports & Analytics',
       rbac: 'Access Control (RBAC)',
       systemSettings: 'System Settings',
+      backup: 'Backup & Recovery',
       masterData: 'Master Data & Policies',
       logs: 'Audit Trail & Logs',
       apiDocs: 'API & Webhook Docs',

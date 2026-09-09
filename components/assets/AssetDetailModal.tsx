@@ -69,7 +69,7 @@ export const AssetDetailModal: React.FC<AssetDetailModalProps> = ({
   const [activeFilterTab, setActiveFilterTab] = useState<'all' | 'specs' | 'financials' | 'lifecycle'>('all');
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 

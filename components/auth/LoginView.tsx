@@ -16,8 +16,9 @@ import {
   KeyRound,
   Shield,
   Fingerprint,
+  Globe,
 } from 'lucide-react';
-import { User } from '../../types';
+import { User, AppLanguage } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { validateCredentials, verifyUser2FA, completeLogin, getRoleBadgeClass } from '../../services/authService';
 import { logActivity } from '../../services/activityLogger';
@@ -27,8 +28,8 @@ interface LoginViewProps {
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
-  const [identifier, setIdentifier] = useState('admin@assetcorp.id');
-  const [password, setPassword] = useState('password123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -42,6 +43,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
+  // Language State (Default English)
+  const [currentLang, setCurrentLang] = useState<AppLanguage>(StorageService.getLanguage() || 'en');
+  const isEn = currentLang === 'en';
+
+  const handleLanguageToggle = () => {
+    const nextLang: AppLanguage = currentLang === 'en' ? 'id' : 'en';
+    StorageService.setLanguage(nextLang);
+    setCurrentLang(nextLang);
+  };
+
   const isDemoMode = StorageService.isDemoMode();
   const users = StorageService.getUsers();
   const appName = StorageService.getAppName();
@@ -53,12 +64,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setSuccessMessage('');
 
     if (!identifier.trim()) {
-      setErrorMessage('Masukkan alamat email dinas atau ID pengguna Anda.');
+      setErrorMessage(isEn ? 'Please enter your work email or user ID.' : 'Masukkan alamat email dinas atau ID pengguna Anda.');
       return;
     }
 
     if (!password) {
-      setErrorMessage('Masukkan kata sandi akun Anda.');
+      setErrorMessage(isEn ? 'Please enter your account password.' : 'Masukkan kata sandi akun Anda.');
       return;
     }
 
@@ -69,7 +80,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       setLoading(false);
 
       if (!result.success) {
-        setErrorMessage(result.message || 'Login gagal. Periksa kembali kredensial Anda.');
+        setErrorMessage(
+          result.message || (isEn ? 'Sign in failed. Please check your credentials.' : 'Login gagal. Periksa kembali kredensial Anda.')
+        );
         logActivity(
           'LOGIN_FAILED',
           'AUTH',
@@ -90,11 +103,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         setErrorMessage('');
       } else {
         // Direct Login Success
-        completeLogin(user);
+        const userToLogin = { ...user, language: currentLang };
+        completeLogin(userToLogin);
         logActivity('LOGIN_SUCCESS', 'AUTH', `Pengguna ${user.name} (${user.role}) berhasil masuk ke sistem.`);
-        setSuccessMessage(`Selamat datang kembali, ${user.name}!`);
+        setSuccessMessage(isEn ? `Welcome back, ${user.name}!` : `Selamat datang kembali, ${user.name}!`);
         setTimeout(() => {
-          onLoginSuccess(user);
+          onLoginSuccess(userToLogin);
         }, 500);
       }
     }, 400);
@@ -106,7 +120,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     if (!pendingUser) return;
 
     if (otpCode.length !== 6) {
-      setErrorMessage('Masukkan 6 digit kode verifikasi Authenticator.');
+      setErrorMessage(isEn ? 'Please enter the 6-digit verification code.' : 'Masukkan 6 digit kode verifikasi Authenticator.');
       return;
     }
 
@@ -117,18 +131,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setLoading(false);
 
     if (verifyResult.success) {
-      completeLogin(pendingUser);
+      const userToLogin = { ...pendingUser, language: currentLang };
+      completeLogin(userToLogin);
       logActivity(
         'LOGIN_2FA_SUCCESS',
         'AUTH',
         `Pengguna ${pendingUser.name} berhasil memverifikasi TOTP 2FA.`
       );
-      setSuccessMessage('Verifikasi 2FA sukses! Mengalihkan ke dashboard...');
+      setSuccessMessage(isEn ? '2FA verified! Redirecting to dashboard...' : 'Verifikasi 2FA sukses! Mengalihkan ke dashboard...');
       setTimeout(() => {
-        onLoginSuccess(pendingUser);
+        onLoginSuccess(userToLogin);
       }, 500);
     } else {
-      setErrorMessage(verifyResult.message || 'Kode verifikasi 2FA tidak valid.');
+      setErrorMessage(verifyResult.message || (isEn ? 'Invalid 2FA code.' : 'Kode verifikasi 2FA tidak valid.'));
     }
   };
 
@@ -147,7 +162,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#181F19]/5 dark:bg-stone-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-10 right-10 w-72 h-72 bg-[#7D562D]/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
+      <div className="w-full max-w-md space-y-5 relative z-10">
+        {/* ═══ Language Switcher Pill ═════════════════════════════════════ */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleLanguageToggle}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-200/80 dark:bg-stone-800 text-xs font-bold text-stone-700 dark:text-stone-300 border border-stone-300/60 dark:border-stone-700 hover:bg-stone-300 dark:hover:bg-stone-700 transition-colors cursor-pointer"
+            title={isEn ? 'Switch to Bahasa Indonesia' : 'Ganti ke Bahasa Inggris'}
+          >
+            <Globe className="w-3.5 h-3.5 text-stone-500" />
+            <span>{isEn ? 'EN' : 'ID'}</span>
+          </button>
+        </div>
+
         {/* ═══ Brand Header (Web-OS Spatial) ══════════════════════════════ */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#181F19] dark:bg-stone-100 text-white dark:text-[#181F19] shadow-lg shadow-black/10">
@@ -162,7 +190,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               {appName}
             </h1>
             <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 max-w-xs mx-auto">
-              Portal Otentikasi & Manajemen Inventaris Aset Terpadu
+              {isEn ? 'Integrated Enterprise Asset & Inventory Management Portal' : 'Portal Otentikasi & Manajemen Inventaris Aset Terpadu'}
             </p>
           </div>
         </div>
@@ -174,9 +202,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             <form onSubmit={handleCredentialsSubmit} className="space-y-4">
               <div className="space-y-1">
                 <h2 className="text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100 font-serif-display">
-                  Masuk ke Akun Anda
+                  {isEn ? 'Sign in to Your Account' : 'Masuk ke Akun Anda'}
                 </h2>
-                <p className="text-xs text-stone-500">Gunakan email dinas atau ID pengguna terdaftar.</p>
+                <p className="text-xs text-stone-500">
+                  {isEn ? 'Use your work email or registered user ID.' : 'Gunakan email dinas atau ID pengguna terdaftar.'}
+                </p>
               </div>
 
               {/* Error Message */}
@@ -198,7 +228,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               {/* Email / Username Input */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-stone-700 dark:text-stone-300 uppercase block">
-                  Email Dinas atau ID Pengguna
+                  {isEn ? 'Work Email or User ID' : 'Email Dinas atau ID Pengguna'}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
@@ -206,7 +236,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     type="text"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="admin@assetcorp.id"
+                    placeholder={isEn ? 'name@agency.com or user ID' : 'nama@instansi.com atau ID'}
                     required
                     className="w-full pl-10 pr-4 py-2.5 bg-white/80 dark:bg-stone-800/80 border border-stone-300 dark:border-stone-700 rounded-2xl text-xs font-semibold text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-hidden focus:ring-2 focus:ring-[#181F19]/20 transition-all"
                   />
@@ -217,9 +247,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-bold text-stone-700 dark:text-stone-300 uppercase block">
-                    Kata Sandi Akun
+                    {isEn ? 'Account Password' : 'Kata Sandi Akun'}
                   </label>
-                  {isDemoMode && <span className="text-[10px] text-stone-400">Default: password123</span>}
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
@@ -235,7 +264,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 cursor-pointer p-1"
-                    title={showPassword ? 'Sembunyikan sandi' : 'Tampilkan sandi'}
+                    title={showPassword ? (isEn ? 'Hide password' : 'Sembunyikan sandi') : (isEn ? 'Show password' : 'Tampilkan sandi')}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -251,7 +280,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 rounded-sm border-stone-400 accent-[#181F19] cursor-pointer"
                   />
-                  <span>Ingat sesi di perangkat ini</span>
+                  <span>{isEn ? 'Remember session on this device' : 'Ingat sesi di perangkat ini'}</span>
                 </label>
               </div>
 
@@ -265,7 +294,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white dark:border-stone-800/30 dark:border-t-stone-800 rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>Masuk ke Portal</span>
+                    <span>{isEn ? 'Sign In to Portal' : 'Masuk ke Portal'}</span>
                     <ArrowRight className="w-4 h-4 stroke-[2px]" />
                   </>
                 )}
@@ -283,18 +312,26 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 className="inline-flex items-center gap-1 text-xs text-stone-500 hover:text-stone-900 dark:hover:text-stone-200 transition-colors cursor-pointer mb-1"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
-                <span>Kembali ke form login</span>
+                <span>{isEn ? 'Back to sign in' : 'Kembali ke form login'}</span>
               </button>
 
               <div className="space-y-1">
                 <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400">
                   <ShieldCheck className="w-5 h-5 stroke-[2px]" />
                   <h2 className="text-base font-bold text-stone-900 dark:text-stone-100 font-serif-display">
-                    Verifikasi Dua Langkah (2FA)
+                    {isEn ? 'Two-Factor Authentication (2FA)' : 'Verifikasi Dua Langkah (2FA)'}
                   </h2>
                 </div>
                 <p className="text-xs text-stone-500 leading-relaxed">
-                  Akun <strong className="text-stone-800 dark:text-stone-200">{pendingUser?.name}</strong> dilindungi dengan otentikasi dua faktor. Masukkan 6-digit kode Authenticator Anda.
+                  {isEn ? (
+                    <>
+                      Account <strong className="text-stone-800 dark:text-stone-200">{pendingUser?.name}</strong> is protected with 2FA. Enter your 6-digit Authenticator code.
+                    </>
+                  ) : (
+                    <>
+                      Akun <strong className="text-stone-800 dark:text-stone-200">{pendingUser?.name}</strong> dilindungi dengan otentikasi dua faktor. Masukkan 6-digit kode Authenticator Anda.
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -317,7 +354,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               {/* OTP Input */}
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-stone-700 dark:text-stone-300 text-center block uppercase">
-                  6-Digit Kode Authenticator (TOTP)
+                  {isEn ? '6-Digit Authenticator Code (TOTP)' : '6-Digit Kode Authenticator (TOTP)'}
                 </label>
                 <input
                   type="text"
@@ -333,7 +370,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   className="w-full text-center tracking-[0.5em] font-mono text-2xl font-bold py-3 bg-white/80 dark:bg-stone-800/80 border border-stone-300 dark:border-stone-700 rounded-2xl text-stone-900 dark:text-stone-100 focus:outline-hidden focus:ring-2 focus:ring-[#181F19]/20 transition-all placeholder:text-stone-300"
                 />
                 <div className="text-[11px] text-stone-400 text-center">
-                  Tip Darurat: Kode <span className="font-mono text-stone-700 dark:text-stone-300 font-bold">123456</span> dapat digunakan dalam mode simulasi.
+                  {isEn
+                    ? 'Open your Authenticator app and enter the active 6-digit verification code.'
+                    : 'Buka aplikasi Authenticator Anda dan masukkan 6-digit kode verifikasi aktif.'}
                 </div>
               </div>
 
@@ -348,54 +387,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 ) : (
                   <>
                     <ShieldCheck className="w-4 h-4" />
-                    <span>Verifikasi & Masuk</span>
+                    <span>{isEn ? 'Verify & Access System' : 'Verifikasi & Masuk'}</span>
                   </>
                 )}
               </button>
             </form>
-          )}
-
-          {/* ═══ Bento Grid Preset Selector (Demo Mode) ════════════════════ */}
-          {isDemoMode && users.length > 1 && (
-            <div className="pt-4 border-t border-stone-200/80 dark:border-stone-800 space-y-2.5">
-              <div className="flex items-center justify-between text-[11px] text-stone-500">
-                <span className="font-bold uppercase tracking-wider">Pilih Cepat Akun Demo</span>
-                <span>Klik untuk mengisi</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {users.slice(0, 4).map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => handleQuickSelect(u)}
-                    className={`p-2.5 text-left rounded-2xl border transition-all cursor-pointer flex flex-col justify-between ${
-                      identifier === u.email
-                        ? 'bg-stone-200/90 dark:bg-stone-800 border-[#181F19] dark:border-stone-200 shadow-2xs'
-                        : 'bg-white/60 dark:bg-stone-950/40 border-stone-200 dark:border-stone-800 text-stone-600 dark:text-stone-400 hover:bg-white dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold truncate text-stone-900 dark:text-stone-100">
-                        {u.name.split(',')[0]}
-                      </span>
-                      {u.twoFactorEnabled && (
-                        <span title="2FA Aktif">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] text-stone-500 truncate mt-0.5">{u.role}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
           )}
         </div>
 
         {/* ═══ Security Footer ═════════════════════════════════════════════ */}
         <div className="text-center text-[11px] text-stone-500 flex items-center justify-center gap-1.5">
           <Shield className="w-3.5 h-3.5 text-stone-600 dark:text-stone-400" />
-          <span>Role-Based Access Control (RBAC) • Enkripsi End-to-End</span>
+          <span>{isEn ? 'Role-Based Access Control (RBAC) • End-to-End Encryption' : 'Role-Based Access Control (RBAC) • Enkripsi End-to-End'}</span>
         </div>
       </div>
     </div>

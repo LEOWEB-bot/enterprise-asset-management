@@ -17,6 +17,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  HardDriveDownload,
   X,
 } from 'lucide-react';
 import { User } from '../../types';
@@ -34,6 +35,7 @@ export type NavigationTab =
   | 'reports'
   | 'rbac'
   | 'system-settings'
+  | 'backup'
   | 'master-data'
   | 'settings'
   | 'logs'
@@ -80,8 +82,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const appName = StorageService.getAppName();
   const canManageSettings = hasPermission(currentUser, 'settings.manage');
   const canViewAudits = hasPermission(currentUser, 'audits.manage') || hasPermission(currentUser, 'settings.manage');
+  const canViewBackup = hasPermission(currentUser, 'backup.view') || hasPermission(currentUser, 'backup.manage') || canManageSettings;
 
-  const currentLang: AppLanguage = language || currentUser.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = language || currentUser.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
 
   const navItems = [
@@ -149,6 +152,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Settings,
       badge: null,
       visible: true,
+    },
+    {
+      id: 'backup' as NavigationTab,
+      label: t.nav.backup,
+      icon: HardDriveDownload,
+      badge: null,
+      visible: canViewBackup,
     },
     {
       id: 'master-data' as NavigationTab,

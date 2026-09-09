@@ -33,6 +33,7 @@ import { ReportsCenter } from './components/analytics/ReportsCenter';
 import { AuditTrailViewer } from './components/audit/AuditTrailViewer';
 import { SettingsMasterData } from './components/settings/SettingsMasterData';
 import { SystemSettings } from './components/settings/SystemSettings';
+import { BackupCenter } from './components/backup/BackupCenter';
 import { RBACManager } from './components/rbac/RBACManager';
 import { IntegrationsCenter } from './components/integrations/IntegrationsCenter';
 import { AssetPublicView } from './components/public/AssetPublicView';
@@ -42,6 +43,7 @@ import { logActivity } from './services/activityLogger';
 import { NotificationService } from './services/notificationService';
 import { completeLogout } from './services/authService';
 import { AppLanguage, getI18n } from './utils/i18n';
+import { ApiService } from './services/apiService';
 
 export default function App() {
   // 1. Initial State from StorageService
@@ -76,6 +78,43 @@ export default function App() {
   const [existingMaintenanceToEdit, setExistingMaintenanceToEdit] = useState<MaintenanceRecord | null>(null);
   const [assetForPublicView, setAssetForPublicView] = useState<Asset | null>(null);
   const [showImportCsvModal, setShowImportCsvModal] = useState<boolean>(false);
+
+  // Initial Sync with Centralized Backend API
+  useEffect(() => {
+    let isMounted = true;
+    async function syncWithServer() {
+      try {
+        const status = await ApiService.getSystemStatus();
+        if (status && isMounted) {
+          if (status.isSetupCompleted) {
+            setIsSetupCompleted(true);
+            StorageService.setSetupCompleted(true);
+          }
+          const serverDb = await ApiService.getCentralizedData();
+          if (serverDb && isMounted) {
+            StorageService.loadServerData(serverDb);
+            setAssets(StorageService.getAssets());
+            setCategories(StorageService.getCategories());
+            setLocations(StorageService.getLocations());
+            setMovements(StorageService.getMovements());
+            setMaintenance(StorageService.getMaintenance());
+            setApprovals(StorageService.getApprovals());
+            setNotifications(StorageService.getNotifications());
+            setUsers(StorageService.getUsers());
+            if (StorageService.isAuthenticated()) {
+              setCurrentUser(StorageService.getCurrentUser());
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Gagal sinkronisasi awal dengan server backend:', err);
+      }
+    }
+    syncWithServer();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Read-only system lock check
   const isReadOnlyMode = StorageService.getSettingValue('system.read_only_mode', 'false') === 'true';
@@ -116,7 +155,7 @@ export default function App() {
 
   // Apply User Language Effect
   useEffect(() => {
-    const activeLang = currentUser.language || StorageService.getLanguage() || 'id';
+    const activeLang = currentUser.language || StorageService.getLanguage() || 'en';
     setLanguage(activeLang);
     if (typeof document !== 'undefined') {
       document.documentElement.lang = activeLang;
@@ -540,7 +579,16 @@ export default function App() {
                   setIsSetupCompleted(false);
                   reloadData();
                 }}
+                onNavigateTab={handleTabSelect}
                 isReadOnlyMode={isReadOnlyMode}
+              />
+            )}
+
+            {activeTab === 'backup' && (
+              <BackupCenter
+                currentUser={currentUser}
+                language={language}
+                onNavigateTab={handleTabSelect}
               />
             )}
 
@@ -607,6 +655,7 @@ export default function App() {
             setAssetToEdit(null);
           }}
           codePrefix={StorageService.getAssetCodePrefix()}
+          language={language}
         />
       )}
 

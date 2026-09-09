@@ -61,7 +61,7 @@ export const SettingsMasterData: React.FC<SettingsMasterDataProps> = ({
   onRefreshData,
   isReadOnlyMode,
 }) => {
-  const currentLang: AppLanguage = language || currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = language || currentUser?.language || StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [activeTab, setActiveTab] = useState<'categories' | 'locations' | 'workflow' | 'network'>('categories');

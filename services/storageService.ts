@@ -30,6 +30,7 @@ import {
   INITIAL_AUDIT_ITEMS,
   INITIAL_ACTIVITY_LOGS,
 } from '../data/enterprise-asset-management';
+import { ApiService } from './apiService';
 
 const STORAGE_KEYS = {
   SETUP_DONE: 'assetcorp_setup_done',
@@ -82,7 +83,53 @@ function safeSetItem(key: string, value: string): void {
   memoryStore[key] = value;
 }
 
+function syncToServer(key: string, value: any): void {
+  try {
+    ApiService.syncCentralizedData({ [key]: value }).catch((err) => {
+      console.warn(`[Sync Warning] Gagal sinkronisasi data ${key} ke server:`, err);
+    });
+  } catch (e) {
+    // Abaikan kegagalan asinkron agar tidak memblokir UI
+  }
+}
+
 export const StorageService = {
+  // Muat dan perbarui seluruh cache lokal dari database server
+  loadServerData(serverDb: any): void {
+    if (!serverDb || typeof serverDb !== 'object') return;
+    if (serverDb.isSetupCompleted !== undefined) {
+      this.setSetupCompleted(Boolean(serverDb.isSetupCompleted));
+    }
+    if (Array.isArray(serverDb.users)) safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(serverDb.users));
+    if (Array.isArray(serverDb.roles)) safeSetItem(STORAGE_KEYS.ROLES, JSON.stringify(serverDb.roles));
+    if (Array.isArray(serverDb.assets)) safeSetItem(STORAGE_KEYS.ASSETS, JSON.stringify(serverDb.assets));
+    if (Array.isArray(serverDb.categories)) safeSetItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(serverDb.categories));
+    if (Array.isArray(serverDb.locations)) safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(serverDb.locations));
+    if (Array.isArray(serverDb.classes)) safeSetItem(STORAGE_KEYS.CLASSES, JSON.stringify(serverDb.classes));
+    if (Array.isArray(serverDb.settings)) safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(serverDb.settings));
+    if (Array.isArray(serverDb.approvals)) safeSetItem(STORAGE_KEYS.APPROVALS, JSON.stringify(serverDb.approvals));
+    if (Array.isArray(serverDb.movements)) safeSetItem(STORAGE_KEYS.MOVEMENTS, JSON.stringify(serverDb.movements));
+    if (Array.isArray(serverDb.disposals)) safeSetItem(STORAGE_KEYS.DISPOSALS, JSON.stringify(serverDb.disposals));
+    if (Array.isArray(serverDb.maintenance)) safeSetItem(STORAGE_KEYS.MAINTENANCE, JSON.stringify(serverDb.maintenance));
+    if (Array.isArray(serverDb.auditCampaigns)) safeSetItem(STORAGE_KEYS.AUDIT_CAMPAIGNS, JSON.stringify(serverDb.auditCampaigns));
+    if (Array.isArray(serverDb.auditItems)) safeSetItem(STORAGE_KEYS.AUDIT_ITEMS, JSON.stringify(serverDb.auditItems));
+    if (Array.isArray(serverDb.activityLogs)) safeSetItem(STORAGE_KEYS.LOGS, JSON.stringify(serverDb.activityLogs));
+    if (Array.isArray(serverDb.notifications)) safeSetItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(serverDb.notifications));
+  },
+
+  async fetchAndSyncFromServer(): Promise<boolean> {
+    try {
+      const data = await ApiService.getCentralizedData();
+      if (data) {
+        this.loadServerData(data);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  },
+
   // Status Setup
   isSetupCompleted(): boolean {
     const val = safeGetItem(STORAGE_KEYS.SETUP_DONE);
@@ -96,10 +143,6 @@ export const StorageService = {
   // Auth Session State
   isAuthenticated(): boolean {
     const val = safeGetItem(STORAGE_KEYS.AUTHENTICATED);
-    // If not set yet but setup is done, default to true or check session
-    if (val === null) {
-      return this.isSetupCompleted();
-    }
     return val === 'true';
   },
 
@@ -130,7 +173,7 @@ export const StorageService = {
     if (modeSetting && (modeSetting.value === 'minimal' || modeSetting.value === 'clean')) {
       return 'minimal';
     }
-    return 'full';
+    return 'minimal';
   },
 
   isDemoMode(): boolean {
@@ -155,23 +198,24 @@ export const StorageService = {
     const isCleanMode = this.getSeedMode() === 'minimal';
     const raw = safeGetItem(STORAGE_KEYS.USERS);
     if (!raw) {
-      return isCleanMode ? [INITIAL_USERS[0]] : INITIAL_USERS;
+      return [{ ...INITIAL_USERS[0], twoFactorEnabled: false }];
     }
     try {
       const parsed: User[] = JSON.parse(raw);
       if (isCleanMode) {
         // Strict isolation: filter out pre-seeded dummy accounts in full real mode
         const filtered = parsed.filter((u) => !['usr-mgr-02', 'usr-aud-03', 'usr-maint-04', 'usr-viewer-05'].includes(u.id));
-        return filtered.length > 0 ? filtered : [INITIAL_USERS[0]];
+        return filtered.length > 0 ? filtered : [{ ...INITIAL_USERS[0], twoFactorEnabled: false }];
       }
       return parsed;
     } catch {
-      return isCleanMode ? [INITIAL_USERS[0]] : INITIAL_USERS;
+      return [{ ...INITIAL_USERS[0], twoFactorEnabled: false }];
     }
   },
 
   saveUsers(users: User[]): void {
     safeSetItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    syncToServer('users', users);
   },
 
   // Roles & Permissions (RBAC)
@@ -198,16 +242,17 @@ export const StorageService = {
 
   saveRoles(roles: RoleDefinition[]): void {
     safeSetItem(STORAGE_KEYS.ROLES, JSON.stringify(roles));
+    syncToServer('roles', roles);
   },
 
   // Current Logged In User
   getCurrentUser(): User {
     const raw = safeGetItem(STORAGE_KEYS.CURRENT_USER);
-    if (!raw) return INITIAL_USERS[0];
+    if (!raw) return { ...INITIAL_USERS[0], twoFactorEnabled: false };
     try {
       return JSON.parse(raw);
     } catch {
-      return INITIAL_USERS[0];
+      return { ...INITIAL_USERS[0], twoFactorEnabled: false };
     }
   },
 
@@ -223,7 +268,7 @@ export const StorageService = {
     if (user && (user.language === 'en' || user.language === 'id')) {
       return user.language;
     }
-    return 'id';
+    return 'en';
   },
 
   setLanguage(lang: 'id' | 'en'): void {
@@ -241,65 +286,69 @@ export const StorageService = {
   // Assets
   getAssets(): Asset[] {
     const raw = safeGetItem(STORAGE_KEYS.ASSETS);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_ASSETS;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_ASSETS;
+      return [];
     }
   },
 
   saveAssets(assets: Asset[]): void {
     safeSetItem(STORAGE_KEYS.ASSETS, JSON.stringify(assets));
+    syncToServer('assets', assets);
   },
 
   // Categories
   getCategories(): AssetCategory[] {
     const raw = safeGetItem(STORAGE_KEYS.CATEGORIES);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_CATEGORIES;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_CATEGORIES;
+      return [];
     }
   },
 
   saveCategories(categories: AssetCategory[]): void {
     safeSetItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    syncToServer('categories', categories);
   },
 
   // Locations
   getLocations(): AssetLocation[] {
     const raw = safeGetItem(STORAGE_KEYS.LOCATIONS);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_LOCATIONS;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_LOCATIONS;
+      return [];
     }
   },
 
   saveLocations(locations: AssetLocation[]): void {
     safeSetItem(STORAGE_KEYS.LOCATIONS, JSON.stringify(locations));
+    syncToServer('locations', locations);
   },
 
   // Classes
   getClasses(): AssetClass[] {
     const raw = safeGetItem(STORAGE_KEYS.CLASSES);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_CLASSES;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_CLASSES;
+      return [];
     }
   },
 
   saveClasses(classes: AssetClass[]): void {
     safeSetItem(STORAGE_KEYS.CLASSES, JSON.stringify(classes));
+    syncToServer('classes', classes);
   },
 
   // Settings
@@ -315,6 +364,7 @@ export const StorageService = {
 
   saveSettings(settings: SystemSetting[]): void {
     safeSetItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
+    syncToServer('settings', settings);
   },
 
   getSettingValue(key: string, defaultValue: string): string {
@@ -381,33 +431,35 @@ export const StorageService = {
   // Approvals
   getApprovals(): ApprovalRequest[] {
     const raw = safeGetItem(STORAGE_KEYS.APPROVALS);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_APPROVALS;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_APPROVALS;
+      return [];
     }
   },
 
   saveApprovals(approvals: ApprovalRequest[]): void {
     safeSetItem(STORAGE_KEYS.APPROVALS, JSON.stringify(approvals));
+    syncToServer('approvals', approvals);
   },
 
   // Movements
   getMovements(): MovementRecord[] {
     const raw = safeGetItem(STORAGE_KEYS.MOVEMENTS);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_MOVEMENTS;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_MOVEMENTS;
+      return [];
     }
   },
 
   saveMovements(movements: MovementRecord[]): void {
     safeSetItem(STORAGE_KEYS.MOVEMENTS, JSON.stringify(movements));
+    syncToServer('movements', movements);
   },
 
   // Disposals
@@ -424,33 +476,35 @@ export const StorageService = {
 
   saveDisposals(disposals: DisposalRecord[]): void {
     safeSetItem(STORAGE_KEYS.DISPOSALS, JSON.stringify(disposals));
+    syncToServer('disposals', disposals);
   },
 
   // Maintenance
   getMaintenance(): MaintenanceRecord[] {
     const raw = safeGetItem(STORAGE_KEYS.MAINTENANCE);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_MAINTENANCE;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_MAINTENANCE;
+      return [];
     }
   },
 
   saveMaintenance(records: MaintenanceRecord[]): void {
     safeSetItem(STORAGE_KEYS.MAINTENANCE, JSON.stringify(records));
+    syncToServer('maintenance', records);
   },
 
   // Audit Campaigns
   getAuditCampaigns(): AuditCampaign[] {
     const raw = safeGetItem(STORAGE_KEYS.AUDIT_CAMPAIGNS);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_AUDIT_CAMPAIGNS;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_AUDIT_CAMPAIGNS;
+      return [];
     }
   },
 
@@ -461,12 +515,12 @@ export const StorageService = {
   // Audit Items
   getAuditItems(): AuditItemRecord[] {
     const raw = safeGetItem(STORAGE_KEYS.AUDIT_ITEMS);
-    if (!raw) return this.isSetupCompleted() ? [] : INITIAL_AUDIT_ITEMS;
+    if (!raw) return [];
     try {
       const parsed = JSON.parse(raw);
       return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return this.isSetupCompleted() ? [] : INITIAL_AUDIT_ITEMS;
+      return [];
     }
   },
 
@@ -477,11 +531,12 @@ export const StorageService = {
   // Activity Logs
   getActivityLogs(): ActivityLog[] {
     const raw = safeGetItem(STORAGE_KEYS.LOGS);
-    if (!raw) return INITIAL_ACTIVITY_LOGS;
+    if (!raw) return [];
     try {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
-      return INITIAL_ACTIVITY_LOGS;
+      return [];
     }
   },
 
@@ -507,27 +562,7 @@ export const StorageService = {
   getNotifications(): AppNotification[] {
     const raw = safeGetItem(STORAGE_KEYS.NOTIFICATIONS);
     if (!raw) {
-      if (this.isSetupCompleted()) {
-        return [];
-      }
-      return [
-        {
-          id: 'notif-1',
-          title: 'Approval Tertunda',
-          message: 'Ada 2 pengajuan mutasi dan disposal yang memerlukan persetujuan Anda.',
-          type: 'WARNING',
-          createdAt: '2026-08-16 11:30:00',
-          isRead: false,
-        },
-        {
-          id: 'notif-2',
-          title: 'Jadwal Pemeliharaan',
-          message: 'Toyota Forklift AST-2021-089 sedang dalam pengerjaan teknisi.',
-          type: 'INFO',
-          createdAt: '2026-08-15 15:45:00',
-          isRead: false,
-        },
-      ];
+      return [];
     }
     try {
       const parsed = JSON.parse(raw);
@@ -623,6 +658,7 @@ export const StorageService = {
   // Reset Data ke Awal
   resetToDefaults(): void {
     this.setSetupCompleted(true);
+    this.setLanguage('en');
     this.saveUsers(INITIAL_USERS);
     this.saveRoles(INITIAL_ROLES);
     this.setCurrentUser(INITIAL_USERS[0]);

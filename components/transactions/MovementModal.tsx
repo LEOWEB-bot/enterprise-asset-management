@@ -50,7 +50,7 @@ export const MovementModal: React.FC<MovementModalProps> = ({
 
   const asset = initialAsset || allAssets.find((a) => a.id === selectedAssetId) || allAssets[0] || null;
 
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const isEn = currentLang === 'en';
 

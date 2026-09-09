@@ -66,6 +66,8 @@ const ALL_PERMISSIONS: { key: Permission; label: string; category: string; descr
   { key: 'system.wizard_setup', label: 'Setup Wizard & Factory Reset', category: 'Tata Kelola Sistem & Keamanan', description: 'Menjalankan ulang instalasi sistem dan mereset basis data ke awal' },
   { key: 'users.manage', label: 'Kelola Data Pengguna', category: 'Tata Kelola Sistem & Keamanan', description: 'Menambah, mengubah data akun, dan status pengguna' },
   { key: 'roles.manage', label: 'Kelola Peran & Hak Akses (RBAC)', category: 'Tata Kelola Sistem & Keamanan', description: 'Mengubah matriks izin peran (RBAC matrix)' },
+  { key: 'backup.view', label: 'Lihat Riwayat & Status Cadangan', category: 'Tata Kelola Sistem & Keamanan', description: 'Melihat status penjadwal internal, konektivitas cloud, dan riwayat arsip snapshot' },
+  { key: 'backup.manage', label: 'Kelola Pencadangan & Pemulihan Data', category: 'Tata Kelola Sistem & Keamanan', description: 'Membuat snapshot instan, mengunggah arsip pemulihan, mengunduh, dan menghapus berkas cadangan' },
 ];
 
 export const RBACManager: React.FC<RBACManagerProps> = ({
@@ -73,7 +75,7 @@ export const RBACManager: React.FC<RBACManagerProps> = ({
   onRefreshData,
   isReadOnlyMode = false,
 }) => {
-  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = currentUser?.language || StorageService.getLanguage() || 'en';
   const isEn = currentLang === 'en';
 
   const [activeTab, setActiveTab] = useState<'users' | 'roles-matrix'>('users');

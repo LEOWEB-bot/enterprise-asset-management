@@ -13,12 +13,18 @@ services:
     image: enterprise-asset-management:latest
     restart: always
     ports:
-      # Port mapping: <HOST_PORT>:<CONTAINER_PORT>
-      - "${VITE_DOCKER_PORT:-8080}:80"
+      # Pemetaan Port Host ke Port Kontainer: <HOST_PORT>:3001
+      - "${VITE_DOCKER_PORT:-8080}:3001"
+    volumes:
+      # Penyimpanan Persisten: Menjamin database dan berkas cadangan aman di host VPS
+      - ./data:/app/data
+    env_file:
+      - .env
     environment:
       - NODE_ENV=production
+      - VITE_BACKEND_PORT=3001
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:80/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3001/api/status"]
       interval: 30s
       timeout: 5s
       retries: 3

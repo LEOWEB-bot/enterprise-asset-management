@@ -68,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showDemoSwitcher, setShowDemoSwitcher] = useState(true);
 
-  const currentLang: AppLanguage = language || currentUser.language || StorageService.getLanguage() || 'id';
+  const currentLang: AppLanguage = language || currentUser.language || StorageService.getLanguage() || 'en';
   const t = getI18n(currentLang);
   const appName = StorageService.getAppName();
 
@@ -83,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
   const handleSwitchUser = onSwitchUser || onUserChange || (() => { });
   const handleMarkAllRead = onMarkAllNotificationsRead || onMarkNotificationsAsRead || (() => { });
   const handleToggleMenu = onToggleSidebar || onOpenMobileMenu || (() => { });
-  const availableUsers = users && users.length > 0 ? users : INITIAL_USERS;
+  const availableUsers = users && users.length > 0 ? users : [INITIAL_USERS[0]];
 
   const unreadCount = (notifications || []).filter((n) => !n.isRead).length;
 
